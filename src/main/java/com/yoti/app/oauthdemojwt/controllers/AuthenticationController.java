@@ -51,7 +51,7 @@ public class AuthenticationController {
         log.info("the user scanned is {}", username);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                userDetails.getUsername(),userDetails.getPassword()
+                userDetails.getUsername(),"jwtpass"
         ));
         HttpHeaders headers = new HttpHeaders();
         headers.add(TOKEN_HEADER, tokenService.generateToken(userDetails));

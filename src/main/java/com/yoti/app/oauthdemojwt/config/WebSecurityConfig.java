@@ -1,10 +1,9 @@
 package com.yoti.app.oauthdemojwt.config;
 
 import com.yoti.app.oauthdemojwt.authentication.AuthenticationTokenFilter;
-import com.yoti.app.oauthdemojwt.authentication.CustomCrsfTokenRepository;
 import com.yoti.app.oauthdemojwt.authentication.EntryPointUnauthorizedHandler;
-import com.yoti.app.oauthdemojwt.authentication.YotiAuthenticationFilter;
 import com.yoti.app.oauthdemojwt.constants.ApiUrlConstants;
+import com.yoti.app.oauthdemojwt.service.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.*;
-import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 import javax.servlet.Filter;
 
@@ -32,6 +30,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${security.signing-key}")
     private String signingKey;
 
+    @Value("${com.yoti.token-header-name}")
+    private String TOKEN_HEADER;
+
     @Value("${security.encoding-strength}")
     private Integer encodingStrength;
 
@@ -40,6 +41,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+
+    @Autowired
+    private TokenService tokenService;
 
     @Autowired
     private EntryPointUnauthorizedHandler unauthorizedHandler;
@@ -75,7 +80,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private Filter getFilter() throws Exception {
-        AuthenticationTokenFilter filter = new AuthenticationTokenFilter();
+        AuthenticationTokenFilter filter = new AuthenticationTokenFilter(TOKEN_HEADER,tokenService,userDetailsService);
         /*filter.setAuthenticationSuccessHandler(successHandler());
         filter.setAuthenticationFailureHandler(failureHandler());*/
         filter.setAuthenticationManager(authenticationManager());
@@ -95,29 +100,4 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return handler;
     }
 
-    @Bean
-    public CsrfTokenRepository csrfTokenRepository() {
-        return new CustomCrsfTokenRepository();
-    }
-
-    /*@Bean
-    public JwtAccessTokenConverter accessTokenConverter() {
-        JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
-        converter.setSigningKey(signingKey);
-        return converter;
-    }
-
-    @Bean
-    public TokenStore tokenStore() {
-        return new JwtTokenStore(accessTokenConverter());
-    }
-
-    @Bean
-    @Primary
-    public DefaultTokenServices defaultTokenServices() {
-        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setTokenStore(tokenStore());
-        defaultTokenServices.setSupportRefreshToken(true);
-        return defaultTokenServices;
-    }*/
 }

@@ -8,7 +8,7 @@ public interface TokenService {
 
      String getUserNameFromToken(final String token);
      Date getCreatedDateFromToken(final String token);
-     Date getExpirateionDataFromToken(final String token);
+     Date getExpirationDateFromToken(final String token);
      String generateToken(UserDetails userDetails);
      Boolean validateToken(String token,UserDetails userDetails);
 

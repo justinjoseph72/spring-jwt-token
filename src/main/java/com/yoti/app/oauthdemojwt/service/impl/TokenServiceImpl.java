@@ -42,7 +42,7 @@ public class TokenServiceImpl implements TokenService {
     public String getUserNameFromToken(final String token) {
         try {
             final Claims claims = getClaimsFromToken(token);
-            return claims.getSubject();
+            return claims.get(SUB_CLAIM).toString();
 
         } catch (Exception e) {
             log.info(e.getMessage());
@@ -65,7 +65,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public Date getExpirateionDataFromToken(final String token) {
+    public Date getExpirationDateFromToken(final String token) {
         try {
             final Claims claims = getClaimsFromToken(token);
             return claims.getExpiration();
@@ -107,7 +107,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     private Boolean isTokenExpired(String token) {
-        final Date expiration = this.getExpirateionDataFromToken(token);
+        final Date expiration = this.getExpirationDateFromToken(token);
         return expiration.before(this.getCurrentDate());
     }
 
@@ -143,7 +143,7 @@ public class TokenServiceImpl implements TokenService {
 
     private Date getExpirationDate() {
         Instant instant = clock.instant().now();
-        Instant expirationIntant = instant.plus(expiration, ChronoUnit.SECONDS);
+        Instant expirationIntant = instant.plus(expiration, ChronoUnit.MINUTES);
         return Date.from(expirationIntant);
     }
 
