@@ -77,7 +77,7 @@ public class GenerateTokenServiceImpl implements GenerateTokenService {
 
     private Date getExpirationDate() {
         Instant instant = clock.instant().now();
-        Instant expirationInstant = instant.plus(expiration, ChronoUnit.MINUTES);
+        Instant expirationInstant = instant.plus(expiration, ChronoUnit.SECONDS);
         return Date.from(expirationInstant);
     }
 
