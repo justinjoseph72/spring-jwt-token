@@ -1,7 +1,7 @@
 package com.yoti.app.oauthdemojwt.authentication;
 
 import com.yoti.app.oauthdemojwt.constants.ApiUrlConstants;
-import com.yoti.app.oauthdemojwt.service.TokenService;
+import com.yoti.app.oauthdemojwt.service.RetrieveDataFromTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
     private final String TOKEN_HEADER;
 
     @Autowired
-    private final TokenService tokenService;
+    private final RetrieveDataFromTokenService retrieveDataFromTokenService;
 
     @Autowired
     private final UserDetailsService userDetailsService;
@@ -39,11 +39,11 @@ public class AuthenticationTokenFilter extends UsernamePasswordAuthenticationFil
         String url = ApiUrlConstants.AUTH_BASE_URL + ApiUrlConstants.LOGIN_ENDPOINT;
         if (!url.equals(httpRequest.getServletPath())) {
             String authToken = httpRequest.getHeaders(TOKEN_HEADER).nextElement();
-            String username = tokenService.getUserNameFromToken(authToken);
+            String username = retrieveDataFromTokenService.getUserNameFromToken(authToken);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-                if (tokenService.validateToken(authToken, userDetails)) {
+                if (retrieveDataFromTokenService.validateToken(authToken, userDetails)) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpRequest));
                     SecurityContextHolder.getContext().setAuthentication(authentication);

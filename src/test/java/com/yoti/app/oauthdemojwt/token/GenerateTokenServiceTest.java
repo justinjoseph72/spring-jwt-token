@@ -1,6 +1,6 @@
 package com.yoti.app.oauthdemojwt.token;
 
-import com.yoti.app.oauthdemojwt.service.TokenService;
+import com.yoti.app.oauthdemojwt.service.GenerateTokenService;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,10 +17,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class TokenServiceTest {
+public class GenerateTokenServiceTest {
 
     @Autowired
-    TokenService tokenService;
+    GenerateTokenService generateTokenService;
 
     @Autowired
     UserDetailsService userDetailsService;
@@ -40,13 +40,13 @@ public class TokenServiceTest {
     public void testTokenGenerationWithoutUserDetails() {
         Assert.assertNotNull(user);
         expectedException.expect(AccessDeniedException.class);
-        tokenService.generateToken(null);
+        generateTokenService.generateToken(null);
     }
 
     @Test
     public void testTokenGenerationWithUser() {
         Assert.assertNotNull(user);
-        String jwtToken = tokenService.generateToken(user);
+        String jwtToken = generateTokenService.generateToken(user);
         Assert.assertThat(jwtToken, Matchers.notNullValue());
     }
 }
