@@ -42,7 +42,7 @@ public class AuthenticationController {
     UserDetailsService userDetailsService;
 
     @GetMapping(ApiUrlConstants.LOGIN_ENDPOINT)
-    public ResponseEntity authenticationUser(@RequestParam(ApiUrlConstants.TOKEN_REQ_PARAM) String token) {
+    public ResponseEntity authenticationUser(@RequestParam(value = ApiUrlConstants.TOKEN_REQ_PARAM) String token) {
         if (Strings.isNullOrEmpty(token)) {
             return ResponseEntity.badRequest().build();
         }
