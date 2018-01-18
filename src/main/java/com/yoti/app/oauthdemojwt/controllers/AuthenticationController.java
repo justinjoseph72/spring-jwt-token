@@ -41,7 +41,7 @@ public class AuthenticationController {
     @Autowired
     UserDetailsService userDetailsService;
 
-    @GetMapping(ApiUrlConstants.LOGIN_ENDPOINT)
+    @GetMapping(ApiUrlConstants.LOGIN_ENDPOINT+"/sss")
     public ResponseEntity authenticationUser(@RequestParam(value = ApiUrlConstants.TOKEN_REQ_PARAM) String token) {
         if (Strings.isNullOrEmpty(token)) {
             return ResponseEntity.badRequest().build();

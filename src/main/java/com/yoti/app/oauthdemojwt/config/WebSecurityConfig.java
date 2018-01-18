@@ -2,8 +2,11 @@ package com.yoti.app.oauthdemojwt.config;
 
 import com.yoti.app.oauthdemojwt.authentication.AuthenticationTokenFilter;
 import com.yoti.app.oauthdemojwt.authentication.EntryPointUnauthorizedHandler;
+import com.yoti.app.oauthdemojwt.authentication.YotiLoginTokenFilter;
 import com.yoti.app.oauthdemojwt.constants.ApiUrlConstants;
+import com.yoti.app.oauthdemojwt.service.GenerateTokenService;
 import com.yoti.app.oauthdemojwt.service.RetrieveDataFromTokenService;
+import com.yoti.app.oauthdemojwt.service.UserFromYoti;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,6 +50,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private RetrieveDataFromTokenService retrieveDataFromTokenService;
 
     @Autowired
+    GenerateTokenService generateTokenService;
+
+    @Autowired
+    UserFromYoti userFromYoti;
+
+    @Autowired
     private EntryPointUnauthorizedHandler unauthorizedHandler;
 
     @Bean
@@ -71,18 +80,45 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers(ApiUrlConstants.AUTH_BASE_URL + ApiUrlConstants.LOGIN_ENDPOINT)
-                .permitAll()
+                .antMatchers("/user-auth/**").permitAll()
                 .and()
                 .authorizeRequests().anyRequest().authenticated();
 
-        http.addFilterBefore(getFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        http.addFilterBefore(getApiFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        //added this filter to capture the yoti token and redirect to another site
+        // we will not need to use the AuthenticationController in this case
+        http.addFilterBefore(getAuthFilter(),UsernamePasswordAuthenticationFilter.class);
     }
 
-    private Filter getFilter() throws Exception {
+    private Filter getApiFilter() throws Exception {
         AuthenticationTokenFilter filter = new AuthenticationTokenFilter(TOKEN_HEADER, retrieveDataFromTokenService, userDetailsService);
         filter.setAuthenticationManager(authenticationManager());
+        filter.setFilterProcessesUrl(ApiUrlConstants.API_BASE_URL);
         return filter;
+    }
+
+    private Filter getAuthFilter() throws Exception {
+        YotiLoginTokenFilter filter = new YotiLoginTokenFilter(ApiUrlConstants.AUTH_BASE_URL+ApiUrlConstants.LOGIN_ENDPOINT,
+                generateTokenService,userDetailsService,userFromYoti);
+        filter.setAuthenticationSuccessHandler(successHandler());
+        filter.setAuthenticationFailureHandler(failureHandler());
+        filter.setAuthenticationManager(authenticationManager());
+        return filter;
+    }
+
+    private AuthenticationFailureHandler failureHandler() {
+        final SimpleUrlAuthenticationFailureHandler handler = new SimpleUrlAuthenticationFailureHandler();
+        handler.setDefaultFailureUrl("http://localhost:8082/ui/fail");
+        return handler;
+    }
+
+    private AuthenticationSuccessHandler successHandler() {
+        final SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
+        handler.setAlwaysUseDefaultTargetUrl(true);
+        handler.setDefaultTargetUrl("http://localhost:8082/ui/secure");
+        return handler;
     }
 
 
