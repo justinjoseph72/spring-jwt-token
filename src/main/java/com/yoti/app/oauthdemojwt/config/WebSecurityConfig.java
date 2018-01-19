@@ -1,6 +1,7 @@
 package com.yoti.app.oauthdemojwt.config;
 
 import com.yoti.app.oauthdemojwt.authentication.AuthenticationTokenFilter;
+import com.yoti.app.oauthdemojwt.authentication.ConnectionsLogoutHadler;
 import com.yoti.app.oauthdemojwt.authentication.EntryPointUnauthorizedHandler;
 import com.yoti.app.oauthdemojwt.authentication.YotiLoginTokenFilter;
 import com.yoti.app.oauthdemojwt.constants.ApiUrlConstants;
@@ -21,6 +22,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.*;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
 import javax.servlet.Filter;
 
@@ -41,6 +43,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${security.security-realm}")
     private String securityRealm;
+
+    private static final String LOGOUT = "/logout";
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -76,11 +80,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .formLogin().disable()
                 .exceptionHandling()
                 .authenticationEntryPoint(unauthorizedHandler).and()
-
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeRequests()
-                .antMatchers("/user-auth/**").permitAll()
+                .and().logout().clearAuthentication(true).invalidateHttpSession(true).logoutUrl(LOGOUT)
+                .logoutSuccessHandler(logoutSuccessHandler()).permitAll()
                 .and()
                 .authorizeRequests().anyRequest().authenticated();
 
@@ -89,7 +91,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         //added this filter to capture the yoti token and redirect to another site
         // we will not need to use the AuthenticationController in this case
-        http.addFilterBefore(getAuthFilter(),UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(getAuthFilter(), UsernamePasswordAuthenticationFilter.class);
+    }
+
+    private LogoutSuccessHandler logoutSuccessHandler() {
+        return new ConnectionsLogoutHadler();
     }
 
     private Filter getApiFilter() throws Exception {
@@ -100,8 +106,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private Filter getAuthFilter() throws Exception {
-        YotiLoginTokenFilter filter = new YotiLoginTokenFilter(ApiUrlConstants.AUTH_BASE_URL+ApiUrlConstants.LOGIN_ENDPOINT,
-                generateTokenService,userDetailsService,userFromYoti);
+        YotiLoginTokenFilter filter = new YotiLoginTokenFilter(ApiUrlConstants.AUTH_BASE_URL + ApiUrlConstants.LOGIN_ENDPOINT,
+                generateTokenService, userDetailsService, userFromYoti);
         filter.setAuthenticationSuccessHandler(successHandler());
         filter.setAuthenticationFailureHandler(failureHandler());
         filter.setAuthenticationManager(authenticationManager());
@@ -115,9 +121,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     private AuthenticationSuccessHandler successHandler() {
-        final SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler();
+        final SimpleUrlAuthenticationSuccessHandler handler = new SimpleUrlAuthenticationSuccessHandler();
         handler.setAlwaysUseDefaultTargetUrl(true);
-        handler.setDefaultTargetUrl("http://localhost:8082/ui/secure");
+        handler.setDefaultTargetUrl("http://localhost:8082/ui/secure-page");
         return handler;
     }
 
