@@ -43,6 +43,7 @@ public class YotiLoginTokenFilter extends AbstractAuthenticationProcessingFilter
         log.info("the jwt token is ", jwtToken);
         Cookie jwtCookie = new Cookie("api-token", jwtToken);
         response.addCookie(jwtCookie);
+        response.setHeader("api-token",jwtToken);
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken("john.doe", "jwtpass");
         return getAuthenticationManager().authenticate(authenticationToken);
     }
@@ -50,4 +51,6 @@ public class YotiLoginTokenFilter extends AbstractAuthenticationProcessingFilter
     private String getTokenFromRequest(final HttpServletRequest request) {
         return request.getParameter("token");
     }
+
+
 }
